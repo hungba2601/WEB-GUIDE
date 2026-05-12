@@ -382,8 +382,9 @@ async function loadStudentAssignments() {
     try {
         const res = await callGAS({ action: 'getAssignments' });
         if (res.success && res.data.length > 0) {
-            studentProblemView.innerHTML = res.data.map(a =>
+            studentProblemView.innerHTML = res.data.map((a, idx) =>
                 `<div class="assignment-item">
+                    <span class="assign-num">${idx + 1}.</span>
                     <a href="${a.link}" target="_blank">${a.fileName}</a>
                     <span class="time">${a.time}</span>
                 </div>`
