@@ -1,0 +1,191 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI Code Mentor - Trợ Lý Chấm Điểm Lập Trình</title>
+    <link rel="stylesheet" href="style.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&display=swap" rel="stylesheet">
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/mammoth/1.6.0/mammoth.browser.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
+</head>
+<body>
+
+    <!-- LOGIN SCREEN -->
+    <div id="login-screen">
+        <div class="login-logo">
+            <i data-lucide="code-2" size="40"></i>
+            <h1>AI Code Mentor</h1>
+            <p>Hệ thống chấm điểm lập trình thông minh</p>
+        </div>
+
+        <!-- Role Selection -->
+        <div id="role-select" class="role-cards">
+            <div class="glass-panel role-card" data-role="gv">
+                <i data-lucide="graduation-cap" size="40"></i>
+                <h3>Giáo viên</h3>
+                <p>Quản lý đề bài & học sinh</p>
+            </div>
+            <div class="glass-panel role-card" data-role="hs">
+                <i data-lucide="user" size="40"></i>
+                <h3>Học sinh</h3>
+                <p>Làm bài & nộp bài tập</p>
+            </div>
+        </div>
+
+        <!-- Login Form (hidden initially) -->
+        <div id="login-form" class="glass-panel" style="display:none;">
+            <button class="btn-back" id="back-to-roles"><i data-lucide="arrow-left" size="16"></i> Quay lại</button>
+            <h2 id="login-title">Đăng nhập</h2>
+            <div class="input-group">
+                <label>Tài khoản</label>
+                <input type="text" id="username" placeholder="Nhập tài khoản...">
+            </div>
+            <div class="input-group">
+                <label>Mật khẩu</label>
+                <input type="password" id="password" placeholder="Nhập mật khẩu...">
+            </div>
+            <button class="btn-primary" id="login-btn">Đăng nhập</button>
+            <button class="btn-secondary" id="show-register-btn" style="display:none;">Chưa có tài khoản? Đăng ký</button>
+        </div>
+    </div>
+
+    <!-- REGISTER MODAL -->
+    <div class="modal" id="register-modal">
+        <div class="glass-panel modal-content">
+            <h2>Đăng ký tài khoản học sinh</h2>
+            <div class="input-group"><label>Tài khoản</label><input type="text" id="reg-user" placeholder="Nhập tài khoản..."></div>
+            <div class="input-group"><label>Mật khẩu</label><input type="password" id="reg-pass" placeholder="Nhập mật khẩu..."></div>
+            <div class="input-group"><label>Họ và tên</label><input type="text" id="reg-name" placeholder="Nhập họ tên..."></div>
+            <div class="input-group"><label>Lớp</label><input type="text" id="reg-class" placeholder="Ví dụ: 10A1"></div>
+            <button class="btn-primary" id="register-btn">Đăng ký</button>
+            <button class="btn-icon" id="close-register" style="position:absolute;top:1rem;right:1rem;"><i data-lucide="x"></i></button>
+        </div>
+    </div>
+
+    <!-- MAIN APP (hidden initially) -->
+    <div id="app-container" style="display:none;">
+        <header>
+            <div class="logo"><i data-lucide="code-2"></i><span>AI Code Mentor</span></div>
+            <nav id="main-tabs" class="tabs-nav">
+                <button class="tab-btn active" data-tab="teacher-tab" id="teacher-nav"><i data-lucide="graduation-cap"></i> Giảng viên</button>
+                <button class="tab-btn" data-tab="student-tab" id="student-nav"><i data-lucide="user"></i> Học sinh</button>
+            </nav>
+            <div class="header-actions">
+                <span id="user-badge" class="user-badge"></span>
+                <button class="btn-icon" id="open-settings" title="Cài đặt"><i data-lucide="settings"></i></button>
+                <button class="btn-icon" id="logout-btn" title="Đăng xuất"><i data-lucide="log-out"></i></button>
+            </div>
+        </header>
+
+        <main>
+            <!-- TAB 1: GIẢNG VIÊN -->
+            <div id="teacher-tab" class="tab-content active">
+                <div class="hero-text"><h1>Quản Lý Lớp Học</h1><p>Đăng đề bài, quản lý tài khoản và theo dõi kết quả học sinh.</p></div>
+
+                <div class="teacher-grid">
+                    <div class="glass-panel upload-area" id="problem-drop-zone">
+                        <input type="file" id="problem-input" accept=".docx,.pdf,.jpg,.jpeg,.png" hidden>
+                        <div class="upload-icon"><i data-lucide="file-up" style="width:100%;height:100%;"></i></div>
+                        <div class="upload-text"><h3>Đăng đề bài mới</h3><p>DOCX, PDF hoặc Ảnh</p></div>
+                        <div id="problem-preview" class="file-preview"></div>
+                        <div id="teacher-upload-actions" class="upload-actions" style="display:none;">
+                            <button class="btn-action btn-upload" id="confirm-upload-btn"><i data-lucide="upload" size="16"></i> Đăng đề bài</button>
+                            <button class="btn-action btn-delete" id="clear-problem-btn"><i data-lucide="trash-2" size="16"></i> Xóa</button>
+                        </div>
+                    </div>
+                    <div class="glass-panel submissions-panel">
+                        <div class="panel-header"><i data-lucide="list-checks"></i><h3>Đề bài đã đăng</h3></div>
+                        <div id="assignments-list" class="panel-body"><p class="empty-msg">Chưa có đề bài.</p></div>
+                    </div>
+                </div>
+
+                <!-- Student Management -->
+                <div class="glass-panel" style="margin-top:1.5rem;">
+                    <div class="panel-header">
+                        <i data-lucide="users"></i><h3>Quản lý học sinh</h3>
+                        <button class="btn-small" id="add-account-btn" style="margin-left:auto;"><i data-lucide="user-plus" size="14"></i> Thêm TK</button>
+                        <button class="btn-small" id="refresh-students-btn" style="margin-left:0.5rem;"><i data-lucide="refresh-cw" size="14"></i></button>
+                    </div>
+                    <div id="student-management" class="panel-body"><p class="empty-msg">Đang tải...</p></div>
+                </div>
+            </div>
+
+            <!-- TAB 2: HỌC SINH -->
+            <div id="student-tab" class="tab-content">
+                <div class="hero-text"><h1>Làm Bài Tập</h1><p>Xem đề bài, nộp mã nguồn và nhận phản hồi từ AI.</p></div>
+
+                <div class="student-grid">
+                    <div class="glass-panel problem-display">
+                        <div class="panel-header">
+                            <div style="display:flex;align-items:center;gap:0.75rem;"><i data-lucide="book-open"></i><h3>Đề bài</h3></div>
+                        </div>
+                        <div id="student-problem-view" class="problem-body"><p class="empty-msg">Đang tải đề bài...</p></div>
+                    </div>
+                    <div class="submission-area">
+                        <div class="glass-panel upload-area" id="drop-zone">
+                            <input type="file" id="file-input" hidden>
+                            <div class="upload-icon"><i data-lucide="upload-cloud" style="width:100%;height:100%;"></i></div>
+                            <div class="upload-text"><h3>Nộp bài làm</h3><p>Hỗ trợ tất cả ngôn ngữ lập trình</p></div>
+                            <div id="code-preview" class="file-preview"></div>
+                            <div id="student-upload-actions" class="upload-actions" style="display:none;">
+                                <button class="btn-action btn-upload" id="analyze-btn"><i data-lucide="sparkles" size="16"></i> Phân tích & Đánh giá</button>
+                                <button class="btn-action btn-delete" id="clear-code-btn"><i data-lucide="trash-2" size="16"></i> Xóa</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <section id="result-section" style="display:none;">
+                    <div class="glass-panel score-card">
+                        <div class="score-circle" id="score-circle"><div class="score-value" id="score-value">0</div><div class="score-label">Điểm số</div></div>
+                        <div class="score-info"><h2 id="overall-feedback">Kết quả bài làm</h2><p id="feedback-summary" style="color:var(--text-muted);margin-top:0.5rem;">Đang chờ...</p></div>
+                    </div>
+                    <div id="error-analysis" class="glass-panel analysis-section">
+                        <h4><i data-lucide="bug" style="color:var(--danger)"></i> Phân tích lỗi chi tiết</h4>
+                        <div id="errors-container" class="errors-list"></div>
+                    </div>
+                    <div class="feedback-grid">
+                        <div class="glass-panel feedback-item positive"><h4><i data-lucide="check-circle" style="color:var(--success)"></i> Ưu điểm</h4><div class="feedback-content" id="pros-content">Chưa có.</div></div>
+                        <div class="glass-panel feedback-item suggest"><h4><i data-lucide="lightbulb" style="color:var(--warning)"></i> Gợi ý cải thiện</h4><div class="feedback-content" id="suggestions-content">Chưa có.</div></div>
+                    </div>
+                </section>
+            </div>
+        </main>
+    </div>
+
+    <!-- SETTINGS MODAL -->
+    <div class="modal" id="settings-modal">
+        <div class="glass-panel modal-content">
+            <h2>Cài đặt hệ thống</h2>
+            <p style="color:var(--text-muted);font-size:0.85rem;margin-bottom:1.5rem;">Cấu hình Gemini AI để phân tích bài tập.</p>
+            <div class="input-group"><label>Gemini API Key</label><input type="password" id="api-key" placeholder="Nhập API Key..."></div>
+            <div class="input-group"><label>Model</label><input type="text" id="model-select" value="gemini-3-flash-preview"></div>
+            <button class="btn-primary" id="save-settings">Lưu cài đặt</button>
+            <button class="btn-icon" id="close-settings" style="position:absolute;top:1rem;right:1rem;"><i data-lucide="x"></i></button>
+        </div>
+    </div>
+
+    <!-- ADD ACCOUNT MODAL -->
+    <div class="modal" id="add-account-modal">
+        <div class="glass-panel modal-content">
+            <h2>Thêm tài khoản</h2>
+            <div class="input-group"><label>Tài khoản</label><input type="text" id="new-acc-user" placeholder="Tài khoản..."></div>
+            <div class="input-group"><label>Mật khẩu</label><input type="text" id="new-acc-pass" placeholder="Mật khẩu..."></div>
+            <div class="input-group"><label>Họ tên</label><input type="text" id="new-acc-name" placeholder="Họ tên..."></div>
+            <div class="input-group"><label>Lớp</label><input type="text" id="new-acc-class" placeholder="Lớp..."></div>
+            <button class="btn-primary" id="confirm-add-account">Thêm</button>
+            <button class="btn-icon" id="close-add-account" style="position:absolute;top:1rem;right:1rem;"><i data-lucide="x"></i></button>
+        </div>
+    </div>
+
+    <!-- LOADING OVERLAY -->
+    <div id="loading-overlay"><div class="spinner"></div><p id="loading-text">Đang xử lý...</p></div>
+
+    <script src="app.js"></script>
+    <script>lucide.createIcons();</script>
+</body>
+</html>
