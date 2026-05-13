@@ -118,6 +118,24 @@
             <div id="student-tab" class="tab-content">
                 <div class="hero-text"><h1>Làm Bài Tập</h1><p>Xem đề bài, nộp mã nguồn và nhận phản hồi từ AI.</p></div>
 
+                <!-- API Key Demo Section -->
+                <div class="glass-panel" style="margin-bottom: 1.5rem; padding: 1rem 1.5rem;">
+                    <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 0.5rem;">
+                        <h4 style="display: flex; align-items: center; gap: 0.5rem; margin: 0;"><i data-lucide="key" style="color:var(--warning)"></i> API Key Demo (Dành cho Học Sinh)</h4>
+                    </div>
+                    <p style="font-size: 0.85rem; color: var(--text-muted); margin-bottom: 1rem;">Copy một trong các mã dưới đây và dán vào phần Cài đặt (biểu tượng bánh răng ở góc trên bên phải) để có thể phân tích bài làm.</p>
+                    <div style="display: flex; gap: 1rem; flex-wrap: wrap;">
+                        <div class="code-block" style="flex: 1; min-width: 250px; display: flex; align-items: center; justify-content: space-between; padding: 0.5rem 0.75rem;">
+                            <code style="font-size: 0.85rem; color: var(--text-main);">AIzaSyDl5VLUI8aoeV3yVfuo2hkw6fnPcJXndIk</code>
+                            <button class="btn-small" onclick="navigator.clipboard.writeText('AIzaSyDl5VLUI8aoeV3yVfuo2hkw6fnPcJXndIk'); alert('Đã copy Key 1!');"><i data-lucide="copy" size="14"></i> Copy</button>
+                        </div>
+                        <div class="code-block" style="flex: 1; min-width: 250px; display: flex; align-items: center; justify-content: space-between; padding: 0.5rem 0.75rem;">
+                            <code style="font-size: 0.85rem; color: var(--text-main);">AIzaSyCBIIHK6oJtQz6dmN1WvJEIjzy9g1BoZZU</code>
+                            <button class="btn-small" onclick="navigator.clipboard.writeText('AIzaSyCBIIHK6oJtQz6dmN1WvJEIjzy9g1BoZZU'); alert('Đã copy Key 2!');"><i data-lucide="copy" size="14"></i> Copy</button>
+                        </div>
+                    </div>
+                </div>
+
                 <div class="student-grid">
                     <div class="glass-panel problem-display">
                         <div class="panel-header">
@@ -139,6 +157,17 @@
                     </div>
                 </div>
 
+                <!-- Lịch sử nộp bài -->
+                <div class="glass-panel" style="margin-top: 1.5rem; padding: 1rem 1.5rem;">
+                    <div class="panel-header" style="padding: 0 0 1rem 0;">
+                        <div style="display:flex;align-items:center;gap:0.75rem;"><i data-lucide="history"></i><h3>Lịch sử nộp bài</h3></div>
+                        <button class="btn-small" id="refresh-history-btn" style="margin-left:auto;"><i data-lucide="refresh-cw" size="14"></i> Cập nhật</button>
+                    </div>
+                    <div id="student-history-list" class="panel-body" style="max-height: 250px; padding: 1rem 0 0 0;">
+                        <p class="empty-msg">Chưa có dữ liệu.</p>
+                    </div>
+                </div>
+
                 <section id="result-section" style="display:none;">
                     <div class="glass-panel score-card">
                         <div class="score-circle" id="score-circle"><div class="score-value" id="score-value">0</div><div class="score-label">Điểm số</div></div>
@@ -151,6 +180,13 @@
                     <div class="feedback-grid">
                         <div class="glass-panel feedback-item positive"><h4><i data-lucide="check-circle" style="color:var(--success)"></i> Ưu điểm</h4><div class="feedback-content" id="pros-content">Chưa có.</div></div>
                         <div class="glass-panel feedback-item suggest"><h4><i data-lucide="lightbulb" style="color:var(--warning)"></i> Gợi ý cải thiện</h4><div class="feedback-content" id="suggestions-content">Chưa có.</div></div>
+                    </div>
+                    <div id="reference-code-section" class="glass-panel analysis-section" style="display:none; margin-top:1.5rem;">
+                        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom: 1rem;">
+                            <h4 style="margin: 0;"><i data-lucide="code" style="color:var(--primary)"></i> Gợi ý sửa lỗi (Code Tham Khảo)</h4>
+                            <button class="btn-small" onclick="navigator.clipboard.writeText(document.getElementById('reference-code-content').textContent); alert('Đã copy code!');"><i data-lucide="copy" size="14"></i> Copy</button>
+                        </div>
+                        <div class="code-block" style="margin-top: 0.5rem; white-space: pre; overflow-x: auto;"><code id="reference-code-content"></code></div>
                     </div>
                 </section>
             </div>

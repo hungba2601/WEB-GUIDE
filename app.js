@@ -73,6 +73,13 @@ const resultSection = $('result-section');
 const loadingOverlay = $('loading-overlay');
 const loadingText = $('loading-text');
 
+const refreshHistoryBtn = $('refresh-history-btn');
+const studentHistoryList = $('student-history-list');
+let currentStudentHistory = [];
+if (refreshHistoryBtn) {
+    refreshHistoryBtn.addEventListener('click', loadStudentHistory);
+}
+
 const tabBtns = document.querySelectorAll('.tab-btn');
 const tabContents = document.querySelectorAll('.tab-content');
 
@@ -179,7 +186,7 @@ function switchTab(tabId) {
     tabBtns.forEach(b => b.classList.toggle('active', b.dataset.tab === tabId));
     tabContents.forEach(c => c.classList.toggle('active', c.id === tabId));
     if (tabId === 'teacher-tab') { loadAssignments(); loadStudents(); }
-    if (tabId === 'student-tab') { loadStudentAssignments(); }
+    if (tabId === 'student-tab') { loadStudentAssignments(); loadStudentHistory(); }
 }
 
 // ============================================
@@ -407,6 +414,70 @@ function selectAssignment(name, checkbox) {
 }
 window.selectAssignment = selectAssignment;
 
+async function loadStudentHistory() {
+    if (!studentHistoryList) return;
+    studentHistoryList.innerHTML = '<p class="empty-msg">Đang tải lịch sử...</p>';
+    try {
+        const res = await callGAS({ action: 'getStudentHistory', username: currentUser.username });
+        if (res.success && res.history.length > 0) {
+            currentStudentHistory = res.history;
+            let html = `<table class="student-table"><thead><tr>
+                <th>Đề bài</th><th>File</th><th>Điểm</th><th>Thời gian</th><th></th>
+            </tr></thead><tbody>`;
+            res.history.forEach((h, idx) => {
+                html += `<tr>
+                    <td style="font-weight:600;color:var(--primary);">${h.assignmentName || '-'}</td>
+                    <td><a href="${h.link}" target="_blank" style="color:var(--primary)">${h.fileName}</a></td>
+                    <td><span class="score-badge">${h.score}</span></td>
+                    <td>${h.time}</td>
+                    <td style="display:flex;gap:0.5rem;align-items:center;">
+                        <button class="btn-small" onclick="viewHistoryDetail(${idx})">Xem chi tiết</button>
+                        <button class="btn-del" onclick="deleteHistorySubmission(${h.row}, '${h.fileName}')">Xóa</button>
+                    </td>
+                </tr>`;
+            });
+            html += '</tbody></table>';
+            studentHistoryList.innerHTML = html;
+        } else {
+            currentStudentHistory = [];
+            studentHistoryList.innerHTML = '<p class="empty-msg">Chưa có lịch sử nộp bài.</p>';
+        }
+    } catch (e) {
+        studentHistoryList.innerHTML = '<p class="empty-msg">Lỗi tải lịch sử.</p>';
+    }
+}
+
+window.deleteHistorySubmission = async function(row, fileName) {
+    if (!confirm(`Bạn có chắc muốn xóa bài nộp "${fileName}" khỏi lịch sử?`)) return;
+    showLoading(true, 'Đang xóa bài nộp...');
+    try {
+        const res = await callGAS({ action: 'deleteSubmission', row });
+        if (res.success) {
+            loadStudentHistory();
+        } else {
+            alert('Lỗi: ' + res.message);
+        }
+    } catch (e) {
+        alert('Lỗi: ' + e.message);
+    } finally {
+        showLoading(false);
+    }
+}
+
+window.viewHistoryDetail = function(idx) {
+    const item = currentStudentHistory[idx];
+    if (!item || !item.raw_json) return alert('Không có dữ liệu nhận xét chi tiết (chỉ hỗ trợ các bài nộp mới).');
+    try {
+        const result = JSON.parse(item.raw_json);
+        displayResults(result);
+        $('code-preview').style.display = 'block';
+        $('code-preview').innerHTML = `<span>📎 ${item.fileName} (Lịch sử)</span>`;
+        window.scrollTo({ top: document.body.scrollHeight, behavior: 'smooth' });
+    } catch (e) {
+        alert('Lỗi đọc dữ liệu: ' + e.message);
+    }
+}
+
 // ============================================
 // 7. STUDENT: SUBMIT CODE
 // ============================================
@@ -443,6 +514,7 @@ clearCodeBtn.addEventListener('click', (e) => {
     studentUploadActions.style.display = 'none';
     fileInput.value = '';
     resultSection.style.display = 'none';
+    if ($('reference-code-section')) $('reference-code-section').style.display = 'none';
 });
 
 analyzeBtn.addEventListener('click', async (e) => {
@@ -479,7 +551,8 @@ Yêu cầu phản hồi bằng JSON DUY NHẤT (không kèm text khác):
     }
   ],
   "pros": ["Ưu điểm"],
-  "suggestions": ["Gợi ý"]
+  "suggestions": ["Gợi ý"],
+  "reference_code": "Mã code mẫu hoàn chỉnh sau khi đã sửa lỗi (nếu có, để trống nếu không cần)"
 }
 Nếu không có lỗi, "errors" để trống [].`;
 
@@ -489,7 +562,10 @@ Nếu không có lỗi, "errors" để trống [].`;
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ contents: [{ parts: [{ text: promptText }] }] })
         });
-        if (!response.ok) throw new Error('Lỗi API Gemini');
+        if (!response.ok) {
+            const errData = await response.text();
+            throw new Error('Lỗi API Gemini: ' + errData);
+        }
 
         const data = await response.json();
         const resText = data.candidates[0].content.parts[0].text;
@@ -513,8 +589,10 @@ Nếu không có lỗi, "errors" để trống [].`;
             score: result.score,
             errors: errText,
             pros: prosText,
-            suggestions: sugText
+            suggestions: sugText,
+            raw_json: JSON.stringify(result)
         });
+        loadStudentHistory();
     } catch (error) {
         console.error(error);
         alert('Lỗi phân tích: ' + error.message);
@@ -547,6 +625,16 @@ function displayResults(result) {
     }
     renderList('pros-content', result.pros);
     renderList('suggestions-content', result.suggestions);
+    
+    const refCodeSection = $('reference-code-section');
+    const refCodeContent = $('reference-code-content');
+    if (result.reference_code && result.reference_code.trim() !== '') {
+        refCodeSection.style.display = 'block';
+        refCodeContent.textContent = result.reference_code;
+    } else {
+        refCodeSection.style.display = 'none';
+    }
+
     resultSection.scrollIntoView({ behavior: 'smooth' });
     lucide.createIcons();
 }

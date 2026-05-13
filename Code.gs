@@ -42,7 +42,7 @@ function setupSheet() {
   if (!s3) {
     s3 = ss.insertSheet(SHEET_SUBMISSIONS);
   }
-  s3.getRange(1, 1, 1, 9).setValues([['Tài khoản', 'Đề bài', 'Link bài nộp', 'Điểm', 'Lỗi chi tiết', 'Ưu điểm', 'Gợi ý', 'Tên file', 'Thời gian']]);
+  s3.getRange(1, 1, 1, 10).setValues([['Tài khoản', 'Đề bài', 'Link bài nộp', 'Điểm', 'Lỗi chi tiết', 'Ưu điểm', 'Gợi ý', 'Tên file', 'Thời gian', 'Dữ liệu AI (JSON)']]);
 
   getOrCreateFolder();
   Logger.log('✅ Setup hoàn tất!');
@@ -65,6 +65,7 @@ function doPost(e) {
       case 'uploadAssignment': result = handleUploadAssignment(data); break;
       case 'getAssignments': result = handleGetAssignments(); break;
       case 'submitWork': result = handleSubmitWork(data); break;
+      case 'getStudentHistory': result = handleGetStudentHistory(data); break;
       case 'getStudents': result = handleGetStudents(); break;
       case 'deleteStudent': result = handleDeleteStudent(data); break;
       case 'deleteAssignment': result = handleDeleteAssignment(data); break;
@@ -207,7 +208,8 @@ function handleSubmitWork(data) {
     data.pros,
     data.suggestions,
     data.fileName,
-    now
+    now,
+    data.raw_json || ''
   ]);
   return { success: true, link: link, message: 'Đã lưu bài nộp!' };
 }
@@ -265,4 +267,25 @@ function handleDeleteSubmission(data) {
   }
   sheet.deleteRow(row);
   return { success: true, message: 'Đã xóa bài nộp.' };
+}
+
+function handleGetStudentHistory(data) {
+  const ss = SpreadsheetApp.getActiveSpreadsheet();
+  const subSheet = ss.getSheetByName(SHEET_SUBMISSIONS);
+  const subRows = subSheet.getDataRange().getValues();
+  const history = [];
+  for (let i = subRows.length - 1; i >= 1; i--) {
+    if (subRows[i][0] === data.username) {
+      history.push({
+        row: i + 1,
+        assignmentName: subRows[i][1],
+        link: subRows[i][2],
+        score: subRows[i][3],
+        fileName: subRows[i][7],
+        time: subRows[i][8],
+        raw_json: subRows[i][9] || null
+      });
+    }
+  }
+  return { success: true, history: history };
 }
