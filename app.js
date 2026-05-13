@@ -1,5 +1,5 @@
 // ============================================
-// AI CODE MENTOR - Frontend Logic
+// QUẢN LÝ HSG TIN HỌC - Frontend Logic
 // ============================================
 
 // --- Global State ---

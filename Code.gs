@@ -1,5 +1,4 @@
-// ============================================
-// AI CODE MENTOR - Google Apps Script Backend
+// QUẢN LÝ HSG TIN HỌC - Google Apps Script Backend
 // ============================================
 // HƯỚNG DẪN CÀI ĐẶT:
 // 1. Tạo Google Sheet mới
@@ -13,14 +12,15 @@
 // 7. Copy URL deployment, dán vào phần Cài đặt của web app
 // ============================================
 
-const FOLDER_NAME = 'AI_Code_Mentor_Data';
+const FOLDER_NAME = 'QUAN_LY_HSG_TIN_HOC_Data';
 const SHEET_ACCOUNTS = 'TaiKhoan';
 const SHEET_ASSIGNMENTS = 'DeBai';
 const SHEET_SUBMISSIONS = 'BaiNop';
+const SPREADSHEET_ID = '10bVigCYjbEZLjV9D8M7xQHwpjj799t0LWINzA04BamU';
 
 // === SETUP ===
 function setupSheet() {
-  const ss = SpreadsheetApp.getActiveSpreadsheet();
+  const ss = SpreadsheetApp.openById(SPREADSHEET_ID);
 
   let s1 = ss.getSheetByName(SHEET_ACCOUNTS);
   if (!s1) {
@@ -97,7 +97,7 @@ function doGet(e) {
 // === HANDLERS ===
 
 function handleLogin(data) {
-  const ss = SpreadsheetApp.getActiveSpreadsheet();
+  const ss = SpreadsheetApp.openById(SPREADSHEET_ID);
   const sheet = ss.getSheetByName(SHEET_ACCOUNTS);
   const rows = sheet.getDataRange().getValues();
   const role = String(data.role);
@@ -111,7 +111,7 @@ function handleLogin(data) {
 }
 
 function handleRegister(data) {
-  const ss = SpreadsheetApp.getActiveSpreadsheet();
+  const ss = SpreadsheetApp.openById(SPREADSHEET_ID);
   const sheet = ss.getSheetByName(SHEET_ACCOUNTS);
   const rows = sheet.getDataRange().getValues();
 
@@ -125,7 +125,7 @@ function handleRegister(data) {
 }
 
 function handleAddAccount(data) {
-  const ss = SpreadsheetApp.getActiveSpreadsheet();
+  const ss = SpreadsheetApp.openById(SPREADSHEET_ID);
   const sheet = ss.getSheetByName(SHEET_ACCOUNTS);
   const rows = sheet.getDataRange().getValues();
   for (let i = 1; i < rows.length; i++) {
@@ -138,7 +138,7 @@ function handleAddAccount(data) {
 }
 
 function handleDeleteStudent(data) {
-  const ss = SpreadsheetApp.getActiveSpreadsheet();
+  const ss = SpreadsheetApp.openById(SPREADSHEET_ID);
   const sheet = ss.getSheetByName(SHEET_ACCOUNTS);
   const rows = sheet.getDataRange().getValues();
   for (let i = rows.length - 1; i >= 1; i--) {
@@ -158,7 +158,7 @@ function handleUploadAssignment(data) {
   file.setSharing(DriveApp.Access.ANYONE_WITH_LINK, DriveApp.Permission.VIEW);
   const link = file.getUrl();
 
-  const ss = SpreadsheetApp.getActiveSpreadsheet();
+  const ss = SpreadsheetApp.openById(SPREADSHEET_ID);
   const sheet = ss.getSheetByName(SHEET_ASSIGNMENTS);
   const now = Utilities.formatDate(new Date(), 'Asia/Ho_Chi_Minh', 'dd/MM/yyyy HH:mm');
   sheet.appendRow([link, data.fileName, now]);
@@ -167,7 +167,7 @@ function handleUploadAssignment(data) {
 }
 
 function handleGetAssignments() {
-  const ss = SpreadsheetApp.getActiveSpreadsheet();
+  const ss = SpreadsheetApp.openById(SPREADSHEET_ID);
   const sheet = ss.getSheetByName(SHEET_ASSIGNMENTS);
   const rows = sheet.getDataRange().getValues();
   const list = [];
@@ -178,7 +178,7 @@ function handleGetAssignments() {
 }
 
 function handleDeleteAssignment(data) {
-  const ss = SpreadsheetApp.getActiveSpreadsheet();
+  const ss = SpreadsheetApp.openById(SPREADSHEET_ID);
   const sheet = ss.getSheetByName(SHEET_ASSIGNMENTS);
   const row = parseInt(data.row);
   if (row < 2 || row > sheet.getLastRow()) {
@@ -196,7 +196,7 @@ function handleSubmitWork(data) {
   file.setSharing(DriveApp.Access.ANYONE_WITH_LINK, DriveApp.Permission.VIEW);
   const link = file.getUrl();
 
-  const ss = SpreadsheetApp.getActiveSpreadsheet();
+  const ss = SpreadsheetApp.openById(SPREADSHEET_ID);
   const sheet = ss.getSheetByName(SHEET_SUBMISSIONS);
   const now = Utilities.formatDate(new Date(), 'Asia/Ho_Chi_Minh', 'dd/MM/yyyy HH:mm');
   sheet.appendRow([
@@ -215,7 +215,7 @@ function handleSubmitWork(data) {
 }
 
 function handleGetStudents() {
-  const ss = SpreadsheetApp.getActiveSpreadsheet();
+  const ss = SpreadsheetApp.openById(SPREADSHEET_ID);
 
   // Lấy danh sách tài khoản HS
   const accSheet = ss.getSheetByName(SHEET_ACCOUNTS);
@@ -259,7 +259,7 @@ function handleGetStudents() {
 }
 
 function handleDeleteSubmission(data) {
-  const ss = SpreadsheetApp.getActiveSpreadsheet();
+  const ss = SpreadsheetApp.openById(SPREADSHEET_ID);
   const sheet = ss.getSheetByName(SHEET_SUBMISSIONS);
   const row = parseInt(data.row);
   if (row < 2 || row > sheet.getLastRow()) {
@@ -270,7 +270,7 @@ function handleDeleteSubmission(data) {
 }
 
 function handleGetStudentHistory(data) {
-  const ss = SpreadsheetApp.getActiveSpreadsheet();
+  const ss = SpreadsheetApp.openById(SPREADSHEET_ID);
   const subSheet = ss.getSheetByName(SHEET_SUBMISSIONS);
   const subRows = subSheet.getDataRange().getValues();
   const history = [];
