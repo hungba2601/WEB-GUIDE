@@ -530,7 +530,9 @@ async function analyzeCode() {
     resultSection.style.display = 'none';
 
     const promptText = `Bạn là giảng viên chấm bài lập trình chuyên nghiệp.
-Nhiệm vụ: Chấm điểm và phân tích lỗi bài làm của học sinh.
+Nhiệm vụ:
+1. Nhận diện ngôn ngữ lập trình của bài làm dựa trên mã nguồn và đuôi file.
+2. Chấm điểm và phân tích lỗi bài làm của học sinh ĐÚNG THEO NGỮ CẢNH CỦA NGÔN NGỮ ĐÓ. Tuyệt đối không lấy khái niệm của ngôn ngữ này (ví dụ C/C++) để nhận xét cho ngôn ngữ khác (ví dụ Pascal hoặc Python).
 
 Mã nguồn học sinh nộp (File: ${currentCodeFileName}):
 \`\`\`
