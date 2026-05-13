@@ -10,6 +10,7 @@ let apiKey = localStorage.getItem('gemini_api_key') || '';
 let modelName = localStorage.getItem('gemini_model_name') || 'gemini-3-flash-preview';
 let currentUser = null; // { username, fullName, className, role }
 let selectedRole = '';
+let selectedAssignment = null; // Tên đề bài học sinh chọn
 
 // --- DOM References ---
 const $ = id => document.getElementById(id);
@@ -324,11 +325,12 @@ async function loadStudents() {
         if (res.submissions.length > 0) {
             html += '<h4 style="margin:1.5rem 0 1rem;display:flex;align-items:center;gap:0.5rem;"><i data-lucide="file-check" size="16"></i> Bài nộp gần đây</h4>';
             html += `<table class="student-table"><thead><tr>
-                <th>Họ tên</th><th>File</th><th>Điểm</th><th>Lỗi</th><th>Ưu điểm</th><th>Gợi ý</th><th>Thời gian</th><th></th>
+                <th>Họ tên</th><th>Đề bài</th><th>File</th><th>Điểm</th><th>Lỗi</th><th>Ưu điểm</th><th>Gợi ý</th><th>Thời gian</th><th></th>
             </tr></thead><tbody>`;
             res.submissions.forEach(s => {
                 html += `<tr>
                     <td>${s.fullName}</td>
+                    <td style="font-weight:600;color:var(--primary);">${s.assignmentName || '-'}</td>
                     <td><a href="${s.link}" target="_blank" style="color:var(--primary)">${s.fileName}</a></td>
                     <td><span class="score-badge">${s.score}</span></td>
                     <td style="max-width:200px;font-size:0.8rem;">${truncate(s.errors, 100)}</td>
@@ -384,14 +386,26 @@ async function loadStudentAssignments() {
         if (res.success && res.data.length > 0) {
             studentProblemView.innerHTML = res.data.map((a, idx) =>
                 `<div class="assignment-item">
-                    <span class="assign-num">${idx + 1}.</span>
+                    <input type="checkbox" class="assign-checkbox" id="check-${idx}" onchange="selectAssignment('${a.fileName}', this)">
+                    <label for="check-${idx}" class="assign-num">${idx + 1}.</label>
                     <a href="${a.link}" target="_blank">${a.fileName}</a>
-                    <span class="time">${a.time}</span>
                 </div>`
             ).join('');
         } else { studentProblemView.innerHTML = '<p class="empty-msg">Chưa có đề bài.</p>'; }
     } catch (e) { studentProblemView.innerHTML = '<p class="empty-msg">Lỗi tải đề bài.</p>'; }
 }
+
+function selectAssignment(name, checkbox) {
+    const checkboxes = document.querySelectorAll('.assign-checkbox');
+    checkboxes.forEach(cb => { if (cb !== checkbox) cb.checked = false; });
+    
+    if (checkbox.checked) {
+        selectedAssignment = name;
+    } else {
+        selectedAssignment = null;
+    }
+}
+window.selectAssignment = selectAssignment;
 
 // ============================================
 // 7. STUDENT: SUBMIT CODE
@@ -434,7 +448,8 @@ clearCodeBtn.addEventListener('click', (e) => {
 analyzeBtn.addEventListener('click', async (e) => {
     e.stopPropagation();
     if (!currentCodeContent) return alert('Chưa chọn file bài làm!');
-    if (!apiKey) { alert('Cấu hình Gemini API Key trong Cài đặt!'); settingsModal.classList.add('active'); return; }
+    if (!selectedAssignment) return alert('Vui lòng tích chọn đề bài tương ứng ở cột bên trái!');
+    if (!apiKey) { alert('Cấu hình Gemini AI trong Cài đặt!'); settingsModal.classList.add('active'); return; }
     await analyzeCode();
 });
 
@@ -491,6 +506,7 @@ Nếu không có lỗi, "errors" để trống [].`;
         await callGAS({
             action: 'submitWork',
             username: currentUser.username,
+            assignmentName: selectedAssignment,
             fileData: base64,
             fileName: currentCodeFileName,
             mimeType: 'text/plain',

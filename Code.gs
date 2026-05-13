@@ -42,7 +42,7 @@ function setupSheet() {
   if (!s3) {
     s3 = ss.insertSheet(SHEET_SUBMISSIONS);
   }
-  s3.getRange(1, 1, 1, 8).setValues([['Tài khoản', 'Link bài nộp', 'Điểm', 'Lỗi chi tiết', 'Ưu điểm', 'Gợi ý', 'Tên file', 'Thời gian']]);
+  s3.getRange(1, 1, 1, 9).setValues([['Tài khoản', 'Đề bài', 'Link bài nộp', 'Điểm', 'Lỗi chi tiết', 'Ưu điểm', 'Gợi ý', 'Tên file', 'Thời gian']]);
 
   getOrCreateFolder();
   Logger.log('✅ Setup hoàn tất!');
@@ -200,6 +200,7 @@ function handleSubmitWork(data) {
   const now = Utilities.formatDate(new Date(), 'Asia/Ho_Chi_Minh', 'dd/MM/yyyy HH:mm');
   sheet.appendRow([
     data.username,
+    data.assignmentName || 'Không xác định',
     link,
     data.score,
     data.errors,
@@ -235,13 +236,14 @@ function handleGetStudents() {
       username: un,
       fullName: accounts[un] ? accounts[un].fullName : un,
       className: accounts[un] ? accounts[un].className : '',
-      link: subRows[i][1],
-      score: subRows[i][2],
-      errors: subRows[i][3],
-      pros: subRows[i][4],
-      suggestions: subRows[i][5],
-      fileName: subRows[i][6],
-      time: subRows[i][7]
+      assignmentName: subRows[i][1],
+      link: subRows[i][2],
+      score: subRows[i][3],
+      errors: subRows[i][4],
+      pros: subRows[i][5],
+      suggestions: subRows[i][6],
+      fileName: subRows[i][7],
+      time: subRows[i][8]
     });
   }
 
